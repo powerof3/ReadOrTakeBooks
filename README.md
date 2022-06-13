@@ -1,6 +1,6 @@
-# Magic Sneak Attacks
+# Read Or Take Books
 
-SKSE plugin that enables sneak attacks with magic
+SKSE plugin that lets you read OR take books
 
 ## Requirements
 * [CMake](https://cmake.org/)
@@ -25,8 +25,8 @@ SKSE plugin that enables sneak attacks with magic
 
 ## Building
 ```
-git clone https://github.com/powerof3/MagicSneakAttacks.git
-cd MagicSneakAttacks
+git clone https://github.com/powerof3/ReadOrTakeBooks.git
+cd ReadOrTakeBooks
 ```
 
 ### SSE
