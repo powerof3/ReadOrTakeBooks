@@ -2,7 +2,7 @@
 
 bool Settings::LoadSettings()
 {
-	constexpr auto path = L"Data/SKSE/Plugins/po3_SometimesTakeBooks.ini";
+	constexpr auto path = L"Data/SKSE/Plugins/po3_ReadOrTakeBooks.ini";
 
 	CSimpleIniA ini;
 	ini.SetUnicode();
