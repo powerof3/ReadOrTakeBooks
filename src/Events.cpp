@@ -14,13 +14,18 @@ namespace Book::Event
 		logger::info("{:*^30}", "EVENTS");
 
 		if (const auto inputMgr = RE::BSInputDeviceManager::GetSingleton()) {
-			inputMgr->AddEventSink(GetSingleton());
+			inputMgr->AddEventSink<RE::InputEvent*>(GetSingleton());
 
 			logger::info("Registered for hotkey event");
 		}
+		if (const auto menuMgr = RE::UI::GetSingleton()) {
+			menuMgr->AddEventSink<RE::MenuOpenCloseEvent>(GetSingleton());
+
+			logger::info("Registered for menu event");
+		}
 	}
 
-	bool Manager::GetToggleState() const
+	bool Manager::IsHotkeyPressed() const
 	{
 		return toggleKeyHeld;
 	}
@@ -43,8 +48,11 @@ namespace Book::Event
 			return EventResult::kContinue;
 		}
 
-		auto player = RE::PlayerCharacter::GetSingleton();
-		if (!player || !player->Is3DLoaded()) {
+		if (auto player = RE::PlayerCharacter::GetSingleton(); !player->Is3DLoaded()) {
+			return EventResult::kContinue;
+		}
+
+		if (const auto UI = RE::UI::GetSingleton(); UI->IsMenuOpen(RE::Console::MENU_NAME)) {
 			return EventResult::kContinue;
 		}
 
@@ -56,12 +64,13 @@ namespace Book::Event
 					if (toggleKeyHeld != button->IsPressed()) {
 						toggleKeyHeld = button->IsPressed();
 
-						auto crossHairPickData = RE::CrosshairPickData::GetSingleton();
-						auto target = crossHairPickData ? crossHairPickData->target.get() : RE::TESObjectREFRPtr{};
-						auto base = target ? target->GetBaseObject() : nullptr;
+						if (auto crossHairPickData = RE::CrosshairPickData::GetSingleton()) {
+							auto target = crossHairPickData->target.get();
+							auto base = target ? target->GetBaseObject() : nullptr;
 
-						if (base && base->IsBook()) {
-							detail::UpdateCrosshairs(RE::PlayerCharacter::GetSingleton());
+							if (base && base->IsBook()) {
+								detail::UpdateCrosshairs(RE::PlayerCharacter::GetSingleton());
+							}
 						}
 					}
 				}
@@ -70,4 +79,16 @@ namespace Book::Event
 
 		return EventResult::kContinue;
 	}
+
+    EventResult Manager::ProcessEvent(const RE::MenuOpenCloseEvent* a_evn, RE::BSTEventSource<RE::MenuOpenCloseEvent>*)
+    {
+		if (a_evn && !a_evn->opening && a_evn->menuName == RE::BookMenu::MENU_NAME) {
+			if (const auto UI = RE::UI::GetSingleton(); UI->IsMenuOpen(RE::InventoryMenu::MENU_NAME)) {
+				return EventResult::kContinue;
+			}
+		    detail::UpdateCrosshairs(RE::PlayerCharacter::GetSingleton());
+		}
+
+	    return EventResult::kContinue;
+    }
 }

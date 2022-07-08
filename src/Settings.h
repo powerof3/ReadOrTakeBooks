@@ -21,7 +21,11 @@ public:
     [[nodiscard]] DefaultAction GetDefaultAction() const;
 	[[nodiscard]] Key GetHotkey() const;
 
+	bool GetAutoUseSpellTomes() const;
+
 private:
 	DefaultAction action{ kAuto };
 	Key hotKey{ Key::kLeftShift };
+
+	bool autoUseSpellTomes{true};
 };
