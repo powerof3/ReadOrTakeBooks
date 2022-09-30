@@ -145,6 +145,10 @@ namespace Book::Hooks
 							return read();
 						}
 					}
+				} else {
+					if (!detail::activate_book(a_this, a_targetRef, a_activatorRef, a_targetCount, false)) {
+						return false;
+					}
 				}
 			}
 
