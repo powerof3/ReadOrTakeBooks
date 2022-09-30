@@ -12,7 +12,7 @@ namespace Book::Hooks
 			{
 				if (a_take) {
 					return a_activator->IsCrimeToActivate() ? RE::GameSettingCollection::GetSingleton()->GetSetting("sSteal")->GetString() :
-                                                              RE::GameSettingCollection::GetSingleton()->GetSetting("sTake")->GetString();
+					                                          RE::GameSettingCollection::GetSingleton()->GetSetting("sTake")->GetString();
 				} else {
 					return RE::GameSettingCollection::GetSingleton()->GetSetting("sRead")->GetString();
 				}
@@ -20,11 +20,10 @@ namespace Book::Hooks
 
 			static std::string get_book_text(RE::TESObjectBOOK* a_this, RE::TESObjectREFR* a_activator)
 			{
-				auto settings = Settings::GetSingleton();
-				auto autoUseSpellTome = settings->GetAutoUseSpellTomes();
-				auto getSpellTome = a_this->TeachesSpell() ? a_this->GetSpell() : nullptr;
+				const auto settings = Settings::GetSingleton();
+				const auto getSpellTome = a_this->TeachesSpell() ? a_this->GetSpell() : nullptr;
 
-				if (getSpellTome && !autoUseSpellTome) {
+				if (getSpellTome && !settings->GetAutoUseSpellTomes()) {
 					return get_activate_label(a_activator, true);
 				}
 
@@ -87,7 +86,7 @@ namespace Book::Hooks
 
 				if (a_read && !teachesSpell) {
 					const auto root = a_targetRef->Get3D();
-					const RE::NiTransform transform = root ? root->world : RE::NiTransform{};
+					const auto transform = root ? root->world : RE::NiTransform{};
 
 					RE::BSString str;
 					a_this->GetDescription(str, nullptr);
@@ -112,11 +111,10 @@ namespace Book::Hooks
 		{
 			if (a_activatorRef) {
 				if (a_activatorRef->IsPlayerRef()) {
-					auto settings = Settings::GetSingleton();
-					auto autoUseSpellTome = settings->GetAutoUseSpellTomes();
-					auto getSpellTome = a_this->TeachesSpell() ? a_this->GetSpell() : nullptr;
+					const auto settings = Settings::GetSingleton();
+					const auto getSpellTome = a_this->TeachesSpell() ? a_this->GetSpell() : nullptr;
 
-					if (getSpellTome && !autoUseSpellTome) {
+					if (getSpellTome && !settings->GetAutoUseSpellTomes()) {
 						if (!detail::activate_book(a_this, a_targetRef, a_activatorRef, a_targetCount, false)) {
 							return false;
 						}
@@ -138,9 +136,8 @@ namespace Book::Hooks
 								}
 								if (a_this->IsRead()) {
 									return take();
-								} else {
-									return read();
 								}
+								return read();
 							}
 						case kTake:
 							return take();
