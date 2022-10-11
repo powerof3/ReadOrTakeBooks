@@ -10,8 +10,13 @@ bool Settings::LoadSettings()
 	ini.LoadFile(path);
 
 	const auto get_value = [&]<class T>(T& a_value, const char* a_section, const char* a_key, const char* a_comment) {
-		a_value = string::lexical_cast<T>(ini.GetValue(a_section, a_key, std::to_string(a_value).c_str()));
-		ini.SetValue(a_section, a_key, std::to_string(a_value).c_str(), a_comment);
+		if constexpr (std::is_same_v<T, bool>) {
+			a_value = ini.GetBoolValue(a_section, a_key, a_value);
+			ini.SetBoolValue(a_section, a_key, a_value, a_comment);
+		} else {
+			a_value = string::lexical_cast<T>(ini.GetValue(a_section, a_key, std::to_string(a_value).c_str()));
+			ini.SetValue(a_section, a_key, std::to_string(a_value).c_str(), a_comment);
+		}
 	};
 
 	get_value(action, "Settings", "Default action", ";Default action upon activating books\n;0 - Automatic (take read books) | 1 - Take | 2 - Read.");
