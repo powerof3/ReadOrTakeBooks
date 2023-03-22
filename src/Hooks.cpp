@@ -161,7 +161,9 @@ namespace Book::Hooks
 
 	void Install()
 	{
-		stl::write_vfunc<RE::TESObjectBOOK, Activate>();
+		Settings::GetSingleton()->LoadSettings();
+
+	    stl::write_vfunc<RE::TESObjectBOOK, Activate>();
 		stl::write_vfunc<RE::TESObjectBOOK, GetActivateText>();
 	}
 }

@@ -25,7 +25,7 @@ public:
 
 private:
 	DefaultAction action{ kAuto };
-	Key hotKey{ Key::kLeftShift };
+	Key hotKey{ 42 };
 
 	bool autoUseSpellTomes{true};
 };

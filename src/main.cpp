@@ -1,15 +1,11 @@
 #include "Events.h"
 #include "Hooks.h"
-#include "Settings.h"
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 {
 	switch (a_message->type) {
 	case SKSE::MessagingInterface::kPostLoad:
-		{
-			Settings::GetSingleton()->LoadSettings();
-			Book::Hooks::Install();
-		}
+		Book::Hooks::Install();
 		break;
 	case SKSE::MessagingInterface::kDataLoaded:
 		Book::Event::Manager::Register();

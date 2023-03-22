@@ -30,16 +30,6 @@ namespace Book::Event
 		return toggleKeyHeld;
 	}
 
-	struct detail
-	{
-		static void UpdateCrosshairs(RE::PlayerCharacter* a_player)
-		{
-			using func_t = decltype(&UpdateCrosshairs);
-			REL::Relocation<func_t> func{ RELOCATION_ID(39535, 40621) };
-			return func(a_player);
-		}
-	};
-
 	EventResult Manager::ProcessEvent(RE::InputEvent* const* a_evn, RE::BSTEventSource<RE::InputEvent*>*)
 	{
 		using InputType = RE::INPUT_EVENT_TYPE;
@@ -48,11 +38,13 @@ namespace Book::Event
 			return EventResult::kContinue;
 		}
 
-		if (auto player = RE::PlayerCharacter::GetSingleton(); !player->Is3DLoaded()) {
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		if (!player || !player->Is3DLoaded()) {
 			return EventResult::kContinue;
 		}
 
-		if (const auto UI = RE::UI::GetSingleton(); UI->IsMenuOpen(RE::Console::MENU_NAME)) {
+		const auto UI = RE::UI::GetSingleton();
+		if (!UI || UI->IsMenuOpen(RE::Console::MENU_NAME) || UI->GameIsPaused()) {
 			return EventResult::kContinue;
 		}
 
@@ -60,16 +52,31 @@ namespace Book::Event
 
 		for (auto event = *a_evn; event; event = event->next) {
 			if (const auto button = event->AsButtonEvent(); button) {
-				if (const auto key = static_cast<Key>(button->GetIDCode()); key == hotKey) {
+				const auto device = event->GetDevice();
+
+				auto key = button->GetIDCode();
+
+				switch (device) {
+				case RE::INPUT_DEVICE::kMouse:
+					key += SKSE::InputMap::kMacro_MouseButtonOffset;
+					break;
+				case RE::INPUT_DEVICE::kGamepad:
+					key = SKSE::InputMap::GamepadMaskToKeycode(key);
+					break;
+				default:
+					break;
+				}
+
+				if (key == hotKey) {
 					if (toggleKeyHeld != button->IsPressed()) {
 						toggleKeyHeld = button->IsPressed();
 
-						if (auto crossHairPickData = RE::CrosshairPickData::GetSingleton()) {
-							auto target = crossHairPickData->target.get();
+						if (const auto crossHairPickData = RE::CrosshairPickData::GetSingleton()) {
+                            const auto target = crossHairPickData->target.get();
 							auto base = target ? target->GetBaseObject() : nullptr;
 
 							if (base && base->IsBook()) {
-								detail::UpdateCrosshairs(RE::PlayerCharacter::GetSingleton());
+								player->UpdateCrosshairs();
 							}
 						}
 					}
@@ -86,7 +93,7 @@ namespace Book::Event
 			if (const auto UI = RE::UI::GetSingleton(); UI->IsMenuOpen(RE::InventoryMenu::MENU_NAME)) {
 				return EventResult::kContinue;
 			}
-		    detail::UpdateCrosshairs(RE::PlayerCharacter::GetSingleton());
+			RE::PlayerCharacter::GetSingleton()->UpdateCrosshairs();
 		}
 
 	    return EventResult::kContinue;

@@ -3,13 +3,14 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
-#include <ClibUtil/string.hpp>
+#include <ClibUtil/simpleINI.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 
 #define DLLEXPORT __declspec(dllexport)
 
 namespace logger = SKSE::log;
 namespace string = clib_util::string;
+namespace ini = clib_util::ini;
 
 using namespace std::literals;
 
@@ -39,4 +40,4 @@ namespace stl
 #	define OFFSET(se, ae) se
 #endif
 
-using Key = RE::BSWin32KeyboardDevice::Key;
+using Key = std::uint32_t;
