@@ -3,13 +3,13 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
-#include <SimpleIni.h>
+#include <ClibUtil/string.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 
 #define DLLEXPORT __declspec(dllexport)
 
 namespace logger = SKSE::log;
-namespace string = SKSE::stl::string;
+namespace string = clib_util::string;
 
 using namespace std::literals;
 
