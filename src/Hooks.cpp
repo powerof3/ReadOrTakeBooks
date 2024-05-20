@@ -8,6 +8,56 @@ namespace Book::Hooks
 	{
 		struct detail
 		{
+		public:
+			static std::string get_book_text(RE::TESObjectBOOK* a_this, RE::TESObjectREFR* a_activator)
+			{
+				const auto settings = Settings::GetSingleton();
+				const auto bookSpell = a_this->GetSpell();
+				const auto isHotkeyPressed = Event::Manager::GetSingleton()->IsHotkeyPressed();
+
+				if (bookSpell && !settings->GetAutoUseSpellTomes()) {
+					return get_activate_label(a_activator, true);
+				}
+
+				const auto take_label_impl = [&]() {
+					return get_activate_label(a_activator, !isHotkeyPressed);
+				};
+				const auto read_label = [&]() {
+					return get_activate_label(a_activator, isHotkeyPressed);
+				};
+				const auto take_label = [&]() {
+					return a_this->CanBeTaken() ? take_label_impl() : read_label();
+				};
+
+				const auto spell_tome_label = [&]() {
+					const auto actor = a_activator->As<RE::Actor>();
+					if (actor && actor->HasSpell(bookSpell) || a_this->IsRead()) {
+						return take_label();
+					}
+					return read_label();
+				};
+
+				switch (settings->GetDefaultAction()) {
+				case kTake:
+					return take_label();
+				case kAuto:
+					{
+						if (bookSpell) {
+							return spell_tome_label();
+						}
+						if (a_this->IsRead()) {
+							return take_label();
+						}
+						return read_label();
+					}
+				case kRead:
+					return read_label();
+				default:
+					return get_activate_label(a_activator, false);
+				}
+			}
+
+		private:
 			static std::string get_activate_label(RE::TESObjectREFR* a_activator, bool a_take)
 			{
 				if (a_take) {
@@ -17,57 +67,11 @@ namespace Book::Hooks
 					return RE::GameSettingCollection::GetSingleton()->GetSetting("sRead")->GetString();
 				}
 			}
-
-			static std::string get_book_text(RE::TESObjectBOOK* a_this, RE::TESObjectREFR* a_activator)
-			{
-				const auto settings = Settings::GetSingleton();
-				const auto getSpellTome = a_this->TeachesSpell() ? a_this->GetSpell() : nullptr;
-
-				if (getSpellTome && !settings->GetAutoUseSpellTomes()) {
-					return get_activate_label(a_activator, true);
-				}
-
-				const auto isHotkeyPressed = Event::Manager::GetSingleton()->IsHotkeyPressed();
-
-				const auto get_take_label = [&]() {
-					return get_activate_label(a_activator, !isHotkeyPressed);
-				};
-				const auto get_read_label = [&]() {
-					return get_activate_label(a_activator, isHotkeyPressed);
-				};
-
-				const auto get_label_for_spell_tome = [&]() {
-					const auto actor = a_activator->As<RE::Actor>();
-					if (actor && actor->HasSpell(getSpellTome) || a_this->IsRead()) {
-						return get_take_label();
-					}
-					return get_read_label();
-				};
-
-				switch (settings->GetDefaultAction()) {
-				case kTake:
-					return get_take_label();
-				case kAuto:
-					{
-						if (getSpellTome) {
-							return get_label_for_spell_tome();
-						}
-						if (a_this->IsRead()) {
-							return get_take_label();
-						}
-						return get_read_label();
-					}
-				case kRead:
-					return get_read_label();
-				default:
-					return get_activate_label(a_activator, false);
-				}
-			}
 		};
 
 		static bool thunk(RE::TESObjectBOOK* a_this, RE::TESObjectREFR* a_activator, RE::BSString& a_dst)
 		{
-			a_dst = fmt::format("{}\n{}", detail::get_book_text(a_this, a_activator), a_activator->GetDisplayFullName());
+			a_dst = std::format("{}\n{}", detail::get_book_text(a_this, a_activator), a_activator->GetDisplayFullName());
 
 			return true;
 		}
@@ -112,26 +116,29 @@ namespace Book::Hooks
 			if (a_activatorRef) {
 				if (a_activatorRef->IsPlayerRef()) {
 					const auto settings = Settings::GetSingleton();
-					const auto getSpellTome = a_this->TeachesSpell() ? a_this->GetSpell() : nullptr;
+					const auto bookSpell = a_this->GetSpell();
 
-					if (getSpellTome && !settings->GetAutoUseSpellTomes()) {
+					if (bookSpell && !settings->GetAutoUseSpellTomes()) {
 						if (!detail::activate_book(a_this, a_targetRef, a_activatorRef, a_targetCount, false)) {
 							return false;
 						}
 					} else {
 						const auto isHotkeyPressed = Event::Manager::GetSingleton()->IsHotkeyPressed();
 
-						const auto take = [&]() {
+						const auto take_impl = [&]() {
 							return detail::activate_book(a_this, a_targetRef, a_activatorRef, a_targetCount, isHotkeyPressed);
 						};
 						const auto read = [&]() {
 							return detail::activate_book(a_this, a_targetRef, a_activatorRef, a_targetCount, !isHotkeyPressed);
 						};
+						const auto take = [&]() {
+							return a_this->CanBeTaken() ? take_impl() : read();
+						};
 
 						switch (Settings::GetSingleton()->GetDefaultAction()) {
 						case kAuto:
 							{
-								if (getSpellTome) {
+								if (bookSpell) {
 									return a_this->IsRead() ? take() : read();
 								}
 								if (a_this->IsRead()) {
@@ -163,7 +170,7 @@ namespace Book::Hooks
 	{
 		Settings::GetSingleton()->LoadSettings();
 
-	    stl::write_vfunc<RE::TESObjectBOOK, Activate>();
+		stl::write_vfunc<RE::TESObjectBOOK, Activate>();
 		stl::write_vfunc<RE::TESObjectBOOK, GetActivateText>();
 	}
 }

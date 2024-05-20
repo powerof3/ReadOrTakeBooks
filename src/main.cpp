@@ -18,8 +18,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 #ifdef SKYRIM_AE
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
 	SKSE::PluginVersionData v;
-	v.PluginVersion(Version::MAJOR);
-	v.PluginName("Read Or Take Books");
+	v.PluginVersion({ Version::MAJOR, Version::MINOR, Version::PATCH });
+	v.PluginName("Read Or Take");
 	v.AuthorName("powerofthree");
 	v.UsesAddressLibrary();
 	v.UsesUpdatedStructs();
@@ -31,7 +31,7 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 {
 	a_info->infoVersion = SKSE::PluginInfo::kVersion;
-	a_info->name = "Read Or Take Books";
+	a_info->name = "Read Or Take";
 	a_info->version = Version::MAJOR;
 
 	if (a_skse->IsEditor()) {
@@ -65,18 +65,18 @@ void InitializeLog()
 	log->flush_on(spdlog::level::info);
 
 	spdlog::set_default_logger(std::move(log));
-	spdlog::set_pattern("[%l] %v"s);
+	spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
 
 	logger::info(FMT_STRING("{} v{}"), Version::PROJECT, Version::NAME);
 }
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
+	SKSE::Init(a_skse);
+
 	InitializeLog();
 
 	logger::info("Game version : {}", a_skse->RuntimeVersion().string());
-
-	SKSE::Init(a_skse);
 
 	const auto messaging = SKSE::GetMessagingInterface();
 	messaging->RegisterListener(MessageHandler);

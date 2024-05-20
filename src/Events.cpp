@@ -3,12 +3,6 @@
 
 namespace Book::Event
 {
-	Manager* Manager::GetSingleton()
-	{
-		static Manager singleton;
-		return std::addressof(singleton);
-	}
-
 	void Manager::Register()
 	{
 		logger::info("{:*^30}", "EVENTS");
@@ -68,8 +62,8 @@ namespace Book::Event
 				}
 
 				if (key == hotKey) {
-					if (toggleKeyHeld != button->IsPressed()) {
-						toggleKeyHeld = button->IsPressed();
+					if (toggleKeyHeld != button->IsHeld()) {
+						toggleKeyHeld = button->IsHeld();
 
 						if (const auto crossHairPickData = RE::CrosshairPickData::GetSingleton()) {
                             const auto target = crossHairPickData->target.get();

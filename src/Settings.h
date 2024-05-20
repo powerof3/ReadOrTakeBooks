@@ -7,15 +7,9 @@ enum DefaultAction
 	kRead,
 };
 
-class Settings
+class Settings : public ISingleton<Settings>
 {
 public:
-    [[nodiscard]] static Settings* GetSingleton()
-	{
-		static Settings singleton;
-		return std::addressof(singleton);
-	}
-
 	bool LoadSettings();
 
     [[nodiscard]] DefaultAction GetDefaultAction() const;
